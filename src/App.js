@@ -1,52 +1,24 @@
 import { useRef, useState } from 'react';
-import './App.css';
 
 function App() {
-
   const [currentMusicDetails, setCurrentMusicDetails] = useState({
     songName: 'Heeriye',
     songArtist: 'Arjit Singh',
     songSrc: './Assets/songs/song1.mp3',
     songAvatar: './Assets/Images/image1.jpg'
-  })
+  });
 
-  //UseStates Variables
   const [audioProgress, setAudioProgress] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [musicIndex, setMusicIndex] = useState(0);
   const [musicTotalLength, setMusicTotalLength] = useState('04 : 38');
   const [musicCurrentTime, setMusicCurrentTime] = useState('00 : 00');
-  const [videoIndex, setVideoIndex] = useState(0)
+  const [avatarClassIndex, setAvatarClassIndex] = useState(0);
+  const [videoIndex, setVideoIndex] = useState(0);
 
-  const currentAudio = useRef()
-
-  const handleMusicProgressBar = (e)=>{
-    setAudioProgress(e.target.value);
-    currentAudio.current.currentTime = e.target.value * currentAudio.current.duration / 100;
-  }
-
-  //Change Avatar Class
-  let avatarClass = ['objectFitCover','objectFitContain','none']
-  const [avatarClassIndex, setAvatarClassIndex] = useState(0)
-  const handleAvatar = ()=>{
-    if (avatarClassIndex >= avatarClass.length - 1) {
-      setAvatarClassIndex(0)
-    }else{
-      setAvatarClassIndex(avatarClassIndex + 1)
-    }
-  }
-
-
-  //Play Audio Function
-  const handleAudioPlay = ()=>{
-    if (currentAudio.current.paused) {
-      currentAudio.current.play();
-      setIsAudioPlaying(true)
-    }else{
-      currentAudio.current.pause();
-      setIsAudioPlaying(false)
-    }
-  }
+  const currentAudio = useRef();
+  const avatarClass = ['objectFitCover', 'objectFitContain', 'none'];
+  const vidArray = ['./Assets/Videos/video3.mp4', './Assets/Videos/video2.mp4', './Assets/Videos/video1.mp4'];
 
   const musicAPI = [
     {
@@ -57,7 +29,7 @@ function App() {
     },
     {
       songName: 'Brazillian-Phonk Mano',
-      songArtist: 'Sloboy,Lucafs',
+      songArtist: 'Sloboy, Lucafs',
       songSrc: './Assets/songs/song2.mp3',
       songAvatar: './Assets/Images/image2.jpg'
     },
@@ -75,7 +47,7 @@ function App() {
     },
     {
       songName: 'One Direction Of My Life',
-      songArtist: 'One Direction ',
+      songArtist: 'One Direction',
       songSrc: './Assets/songs/song5.mp3',
       songAvatar: './Assets/Images/image5.jpg'
     },
@@ -93,7 +65,7 @@ function App() {
     },
     {
       songName: 'Summertime Sadness',
-      songArtist: 'Lana Del Rey ',
+      songArtist: 'Lana Del Rey',
       songSrc: './Assets/songs/song8.mp3',
       songAvatar: './Assets/Images/image8.jpg'
     },
@@ -105,7 +77,7 @@ function App() {
     },
     {
       songName: 'Yimmy Yimmy',
-      songArtist: 'Tayc ',
+      songArtist: 'Tayc',
       songSrc: './Assets/songs/song10.mp3',
       songAvatar: './Assets/Images/image10.jpg'
     },
@@ -115,101 +87,99 @@ function App() {
       songSrc: './Assets/songs/song11.mp3',
       songAvatar: './Assets/Images/image11.jpg'
     }
-  ]
+  ];
 
-  const handleNextSong = ()=>{
-    if (musicIndex >= musicAPI.length - 1) {
-      let setNumber = 0;
-      setMusicIndex(setNumber);
-      updateCurrentMusicDetails(setNumber);
-    }else{
-      let setNumber = musicIndex + 1;
-      setMusicIndex(setNumber)
-      updateCurrentMusicDetails(setNumber);
+  // Handle changing avatar style
+  const handleAvatar = () => setAvatarClassIndex((avatarClassIndex + 1) % avatarClass.length);
+
+  // Toggle Play and Pause
+  const handleAudioPlay = () => {
+    if (currentAudio.current.paused) {
+      currentAudio.current.play();
+    } else {
+      currentAudio.current.pause();
     }
-  }
+    setIsAudioPlaying(!isAudioPlaying);
+  };
 
-  const handlePrevSong = ()=>{
-    if (musicIndex === 0) {
-      let setNumber = musicAPI.length - 1;
-      setMusicIndex(setNumber);
-      updateCurrentMusicDetails(setNumber);
-    }else{
-      let setNumber = musicIndex - 1;
-      setMusicIndex(setNumber)
-      updateCurrentMusicDetails(setNumber);
-    }
-  }
+  // Change song based on direction (next or previous)
+  const changeSong = (direction) => {
+    let newIndex = (musicIndex + direction + musicAPI.length) % musicAPI.length;
+    if (newIndex < 0) newIndex = musicAPI.length - 1;  // Ensure newIndex wraps correctly to the last song if negative.
+    setMusicIndex(newIndex);
+    updateCurrentMusicDetails(newIndex);
+  };
 
-  const updateCurrentMusicDetails = (number)=>{
-    let musicObject = musicAPI[number];
+  const handleMusicProgressBar = (e) => {
+    const progress = e.target.value;
+    setAudioProgress(progress);
+    currentAudio.current.currentTime = (progress * currentAudio.current.duration) / 100;
+  };
+
+  const updateCurrentMusicDetails = (index) => {
+    const musicObject = musicAPI[index];
     currentAudio.current.src = musicObject.songSrc;
+    setCurrentMusicDetails(musicObject);
     currentAudio.current.play();
-    setCurrentMusicDetails({
-      songName: musicObject.songName,
-      songArtist: musicObject.songArtist,
-      songSrc: musicObject.songSrc,
-      songAvatar: musicObject.songAvatar
-    })
     setIsAudioPlaying(true);
-  }
+  };
 
-  const handleAudioUpdate = ()=>{
-    //Input total length of the audio
-    let minutes = Math.floor(currentAudio.current.duration / 60);
-    let seconds = Math.floor(currentAudio.current.duration % 60);
-    let musicTotalLength0 = `${minutes <10 ? `0${minutes}` : minutes} : ${seconds <10 ? `0${seconds}` : seconds}`;
-    setMusicTotalLength(musicTotalLength0);
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${minutes} : ${secs}`;
+  };
 
-    //Input Music Current Time
-    let currentMin = Math.floor(currentAudio.current.currentTime / 60);
-    let currentSec = Math.floor(currentAudio.current.currentTime % 60);
-    let musicCurrentT = `${currentMin <10 ? `0${currentMin}` : currentMin} : ${currentSec <10 ? `0${currentSec}` : currentSec}`;
-    setMusicCurrentTime(musicCurrentT);
+  const handleAudioUpdate = () => {
+    setMusicTotalLength(formatTime(currentAudio.current.duration));
+    setMusicCurrentTime(formatTime(currentAudio.current.currentTime));
+    setAudioProgress((currentAudio.current.currentTime / currentAudio.current.duration) * 100 || 0);
+  };
 
-    const progress = parseInt((currentAudio.current.currentTime / currentAudio.current.duration) * 100);
-    setAudioProgress(isNaN(progress)? 0 : progress)
-  }
-
-
-  const vidArray = ['./Assets/Videos/video1.mp4','./Assets/Videos/video2.mp4','./Assets/Videos/video3.mp4','./Assets/Videos/video4.mp4','./Assets/Videos/video5.mp4','./Assets/Videos/video6.mp4'];
-
-  const handleChangeBackground = ()=>{
-    if (videoIndex >= vidArray.length - 1) {
-      setVideoIndex(0);
-    }else{
-      setVideoIndex(videoIndex + 1)
-    }
-  }
-
+  const handleChangeBackground = () => setVideoIndex((videoIndex + 1) % vidArray.length);
 
   return (
-    <>
-    <div className="container">
-      <audio src='./Assets/songs/song1.mp3' ref={currentAudio} onEnded={handleNextSong} onTimeUpdate={handleAudioUpdate}></audio>
-      <video src={vidArray[videoIndex]} loop muted autoPlay className='backgroundVideo'></video>
-      <div className="blackScreen"></div>
-      <div className="music-Container">
-        <p className='musicPlayer'>Harmonic</p>
-        <p className='music-Head-Name'>{currentMusicDetails.songName}</p>
-        <p className='music-Artist-Name'>{currentMusicDetails.songArtist}</p>
-        <img src={currentMusicDetails.songAvatar} className={avatarClass[avatarClassIndex]} onClick={handleAvatar} alt="song Avatar" id='songAvatar'/>
-        <div className="musicTimerDiv">
-          <p className='musicCurrentTime'>{musicCurrentTime}</p>
-          <p className='musicTotalLenght'>{musicTotalLength}</p>
+    <div className="min-h-screen min-w-full flex justify-center items-center text-white font-poppins relative">
+      <audio
+        src='./Assets/songs/song1.mp3'
+        ref={currentAudio}
+        onEnded={() => changeSong(1)}
+        onTimeUpdate={handleAudioUpdate}
+      />
+      <video src={vidArray[videoIndex]} loop muted autoPlay className='absolute inset-0 w-full h-screen object-cover filter saturate-150' />
+      <div className="absolute inset-0 bg-black bg-opacity-20 pointer-events-none" />
+      <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl shadow-lg p-8 w-96 flex flex-col items-center">
+        <p className='text-lg mb-2 text-gray-300'>Harmony Player</p>
+        <p className='text-2xl'>{currentMusicDetails.songName}</p>
+        <p className='text-lg text-gray-400 mb-2'>{currentMusicDetails.songArtist}</p>
+        <img
+          src={currentMusicDetails.songAvatar}
+          className={`rounded-full w-48 h-48 cursor-pointer animate-pulse ${avatarClass[avatarClassIndex]}`}
+          onClick={handleAvatar}
+          alt="song Avatar"
+          id='songAvatar'
+        />
+        <div className="flex justify-between w-full font-semibold">
+          <p>{musicCurrentTime}</p>
+          <p>{musicTotalLength}</p>
         </div>
-        <input type="range" name="musicProgressBar" className='musicProgressBar' value={audioProgress} onChange={handleMusicProgressBar} />
-        <div className="musicControlers">
-          <i className='fa-solid fa-backward musicControler' onClick={handlePrevSong}></i>
-          <i className={`fa-solid ${isAudioPlaying? 'fa-pause-circle' : 'fa-circle-play'} playBtn`} onClick={handleAudioPlay}></i>
-          <i className='fa-solid fa-forward musicControler' onClick={handleNextSong}></i>
+        <input
+          type="range"
+          name="musicProgressBar"
+          className='w-full h-2 rounded-lg appearance-none bg-blue-200'
+          value={audioProgress}
+          onChange={handleMusicProgressBar}
+        />
+        <div className="flex items-center mt-4">
+          <i className='fa-solid fa-backward text-white text-2xl cursor-pointer' onClick={() => changeSong(-1)} />
+          <i className={`fa-solid ${isAudioPlaying ? 'fa-pause-circle' : 'fa-circle-play'} text-white text-4xl mx-4 cursor-pointer`} onClick={handleAudioPlay} />
+          <i className='fa-solid fa-forward text-white text-2xl cursor-pointer' onClick={() => changeSong(1)} />
         </div>
       </div>
-      <div className="changeBackBtn" onClick={handleChangeBackground}>
+      <div className="bg-blue-300 bg-opacity-20 backdrop-blur-lg rounded-t-lg p-3 absolute bottom-0 left-1/2 transform -translate-x-1/2 transition duration-300 cursor-pointer text-center font-semibold text-white" onClick={handleChangeBackground}>
         Change Background
       </div>
     </div>
-    </>
   );
 }
 
